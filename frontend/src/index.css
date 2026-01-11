@@ -1,1 +1,30 @@
 @import "tailwindcss";
+
+/* =========================
+   GLOBAL CURSOR RULES
+   ========================= */
+
+/* All buttons & clickable elements */
+button,
+a,
+[role="button"],
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Disabled buttons */
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+/* Text inputs */
+input,
+textarea {
+  cursor: text;
+}
+
+/* Select dropdowns */
+select {
+  cursor: pointer;
+}
