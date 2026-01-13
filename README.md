@@ -56,23 +56,27 @@ https://online-job-portal-ptpz.onrender.com
 
 ## 🧩 Project Structure
 
+```text
 Job_portal/
-│
 ├── backend/
-│ ├── controllers/
-│ ├── models/
-│ ├── routes/
-│ ├── middlewares/
-│ ├── utils/
-│ └── index.js
+│   ├── controllers/
+│   ├── models/
+│   ├── routes/
+│   ├── middlewares/
+│   ├── utils/
+│   └── index.js
 │
 ├── frontend/
-│ ├── src/
-│ ├── components/
-│ └── pages/
+│   ├── src/
+│   │   ├── components/
+│   │   └── pages/
+│   │
+│   └── index.html
 │
-├── package.json (root)
+├── package.json
+├── package-lock.json
 └── .gitignore
+
 
 
 
@@ -149,6 +153,7 @@ Computer Science Student | MERN Stack Developer
 ⭐ Acknowledgement
 
 This project was built with a strong focus on concept clarity, backend logic, and real-world development practices, inspired by a detailed MERN stack tutorial.
+
 
 
 
