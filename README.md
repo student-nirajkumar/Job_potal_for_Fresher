@@ -123,6 +123,9 @@ Backend runs on:
 ```
 http://localhost:8000
 ```
+
+
+```
 📚 What I Learned
 
 Designing RESTful APIs with Express.js
@@ -139,6 +142,9 @@ Securing applications using environment variables
 
 Deploying a full-stack MERN application
 
+```
+
+```
 
 🔮 Future Enhancements
 
@@ -150,6 +156,11 @@ Admin analytics dashboard
 
 CI/CD pipeline integration
 
+
+```
+
+```
+
 👨‍💻 Author
 
 Niraj Kumar
@@ -158,6 +169,8 @@ Computer Science Student | MERN Stack Developer
 ⭐ Acknowledgement
 
 This project was built with a strong focus on concept clarity, backend logic, and real-world development practices, inspired by a detailed MERN stack tutorial.
+
+```
 
 
 
