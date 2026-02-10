@@ -1,278 +1,122 @@
-// import { User } from "../models/user.model.js";
-// import bcrypt from "bcryptjs";
-// import jwt from "jsonwebtoken";
-// import getDataUri from "../utils/datauri.js";
-// import cloudinary from "../utils/cloudinary.js";
-
-// export const register = async (req, res) => {
-//     try {
-//         const { fullname, email, phoneNumber, password, role } = req.body;
-         
-//         if (!fullname || !email || !phoneNumber || !password || !role) {
-//             return res.status(400).json({
-//                 message: "Something is missing",
-//                 success: false
-//             });
-//         };
-//         const file = req.file;
-//         const fileUri = getDataUri(file);
-//         const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
-
-//         const user = await User.findOne({ email });
-//         if (user) {
-//             return res.status(400).json({
-//                 message: 'User already exist with this email.',
-//                 success: false,
-//             })
-//         }
-//         const hashedPassword = await bcrypt.hash(password, 10);
-
-//         await User.create({
-//             fullname,
-//             email,
-//             phoneNumber,
-//             password: hashedPassword,
-//             role,
-//             profile:{
-//                 profilePhoto:cloudResponse.secure_url,
-//             }
-//         });
-
-//         return res.status(201).json({
-//             message: "Account created successfully.",
-//             success: true
-//         });
-//     } catch (error) {
-//         console.log(error);
-//     }
-// }
-// export const login = async (req, res) => {
-//     try {
-//         const { email, password, role } = req.body;
-        
-//         if (!email || !password || !role) {
-//             return res.status(400).json({
-//                 message: "Something is missing",
-//                 success: false
-//             });
-//         };
-//         let user = await User.findOne({ email });
-//         if (!user) {
-//             return res.status(400).json({
-//                 message: "Incorrect email or password.",
-//                 success: false,
-//             })
-//         }
-//         const isPasswordMatch = await bcrypt.compare(password, user.password);
-//         if (!isPasswordMatch) {
-//             return res.status(400).json({
-//                 message: "Incorrect email or password.",
-//                 success: false,
-//             })
-//         };
-//         // check role is correct or not
-//         if (role !== user.role) {
-//             return res.status(400).json({
-//                 message: "Account doesn't exist with current role.",
-//                 success: false
-//             })
-//         };
-
-//         const tokenData = {
-//             userId: user._id
-//         }
-//         const token = await jwt.sign(tokenData, process.env.SECRET_KEY, { expiresIn: '1d' });
-
-//         user = {
-//             _id: user._id,
-//             fullname: user.fullname,
-//             email: user.email,
-//             phoneNumber: user.phoneNumber,
-//             role: user.role,
-//             profile: user.profile
-//         }
-
-//        return res.status(200).cookie("token", "", {
-//     maxAge: 0,
-//     httpOnly: true,
-//     secure: true,
-//     sameSite: "none"
-// }).json({
-
-//             message: `Welcome back ${user.fullname}`,
-//             user,
-//             success: true
-//         })
-//     } catch (error) {
-//         console.log(error);
-//     }
-// }
-// export const logout = async (req, res) => {
-//     try {
-//         return res.status(200).cookie("token", "", {
-//     maxAge: 0,
-//     httpOnly: true,
-//     secure: true,
-//     sameSite: "none"
-// }).json({
-
-//             message: "Logged out successfully.",
-//             success: true
-//         })
-//     } catch (error) {
-//         console.log(error);
-//     }
-// }
-// export const updateProfile = async (req, res) => {
-//     try {
-//         const { fullname, email, phoneNumber, bio, skills } = req.body;
-        
-//         const file = req.file;
-//         // cloudinary ayega idhar
-//         const fileUri = getDataUri(file);
-//         const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
-
-
-
-//         let skillsArray;
-//         if(skills){
-//             skillsArray = skills.split(",");
-//         }
-//         const userId = req.id; // middleware authentication
-//         let user = await User.findById(userId);
-
-//         if (!user) {
-//             return res.status(400).json({
-//                 message: "User not found.",
-//                 success: false
-//             })
-//         }
-//         // updating data
-//         if(fullname) user.fullname = fullname
-//         if(email) user.email = email
-//         if(phoneNumber)  user.phoneNumber = phoneNumber
-//         if(bio) user.profile.bio = bio
-//         if(skills) user.profile.skills = skillsArray
-      
-//         // resume comes later here...
-//         if(cloudResponse){
-//             user.profile.resume = cloudResponse.secure_url // save the cloudinary url
-//             user.profile.resumeOriginalName = file.originalname // Save the original file name
-//         }
-
-
-//         await user.save();
-
-//         user = {
-//             _id: user._id,
-//             fullname: user.fullname,
-//             email: user.email,
-//             phoneNumber: user.phoneNumber,
-//             role: user.role,
-//             profile: user.profile
-//         }
-
-//         return res.status(200).json({
-//             message:"Profile updated successfully.",
-//             user,
-//             success:true
-//         })
-//     } catch (error) {
-//         console.log(error);
-//     }
-// } 
-
-
-
 import { User } from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import getDataUri from "../utils/datauri.js";
 import cloudinary from "../utils/cloudinary.js";
+import crypto from "crypto";
+import { sendResetPasswordEmail } from "../utils/sendResetPasswordEmail.js";
+import { sendEmailVerification } from "../utils/sendEmailVerification.js";
 
-/* ================= REGISTER ================= */
+/* =========================
+   REGISTER USER (SEND VERIFICATION EMAIL HERE)
+========================= */
 export const register = async (req, res) => {
     try {
         const { fullname, email, phoneNumber, password, role } = req.body;
 
         if (!fullname || !email || !phoneNumber || !password || !role) {
             return res.status(400).json({
-                message: "Something is missing",
-                success: false
+                success: false,
+                message: "Something is missing"
             });
         }
 
-        const userExist = await User.findOne({ email });
-        if (userExist) {
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
             return res.status(400).json({
-                message: "User already exists with this email",
-                success: false
+                success: false,
+                message: "User already exists with this email"
             });
         }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
 
         let profilePhoto = "";
         if (req.file) {
             const fileUri = getDataUri(req.file);
-            const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
+            const cloudResponse = await cloudinary.uploader.upload(
+                fileUri.content
+            );
             profilePhoto = cloudResponse.secure_url;
         }
 
-        await User.create({
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // 1️⃣ Create user
+        const user = await User.create({
             fullname,
             email,
             phoneNumber,
             password: hashedPassword,
             role,
-            profile: {
-                profilePhoto
-            }
+            profile: { profilePhoto },
+            isEmailVerified: false
         });
 
+        // 2️⃣ Generate verification token
+        const verificationToken = crypto.randomBytes(32).toString("hex");
+
+        user.emailVerificationToken = verificationToken;
+        user.emailVerificationExpiry = Date.now() + 24 * 60 * 60 * 1000;
+        await user.save();
+
+        // 3️⃣ Send verification email
+        await sendEmailVerification(user.email, verificationToken);
+
         return res.status(201).json({
-            message: "Account created successfully",
-            success: true
+            success: true,
+            message: "Account created. Please verify your email before login."
         });
 
     } catch (error) {
         console.log(error);
-        return res.status(500).json({ success: false });
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
     }
 };
 
-/* ================= LOGIN ================= */
+/* =========================
+   LOGIN USER (NO EMAIL SENDING HERE)
+========================= */
 export const login = async (req, res) => {
     try {
         const { email, password, role } = req.body;
 
         if (!email || !password || !role) {
             return res.status(400).json({
-                message: "Something is missing",
-                success: false
+                success: false,
+                message: "Something is missing"
             });
         }
 
-        let user = await User.findOne({ email });
+        const user = await User.findOne({ email });
         if (!user) {
-            return res.status(400).json({
-                message: "Incorrect email or password",
-                success: false
+            return res.status(404).json({
+                success: false,
+                message: "User does not exist"
             });
         }
 
         const isPasswordMatch = await bcrypt.compare(password, user.password);
         if (!isPasswordMatch) {
-            return res.status(400).json({
-                message: "Incorrect email or password",
-                success: false
+            return res.status(401).json({
+                success: false,
+                message: "Incorrect password"
             });
         }
 
         if (role !== user.role) {
             return res.status(400).json({
-                message: "Account doesn't exist with this role",
-                success: false
+                success: false,
+                message: "Account does not exist with this role"
+            });
+        }
+
+        // 🔐 ONLY BLOCK LOGIN (DO NOT SEND EMAIL)
+        if (!user.isEmailVerified) {
+            return res.status(403).json({
+                success: false,
+                message: "Please verify your email before login"
             });
         }
 
@@ -285,12 +129,13 @@ export const login = async (req, res) => {
         return res
             .status(200)
             .cookie("token", token, {
-                maxAge: 1 * 24 * 60 * 60 * 1000,
                 httpOnly: true,
                 secure: true,
-                sameSite: "none"
+                sameSite: "none",
+                maxAge: 24 * 60 * 60 * 1000
             })
             .json({
+                success: true,
                 message: `Welcome back ${user.fullname}`,
                 user: {
                     _id: user._id,
@@ -299,17 +144,21 @@ export const login = async (req, res) => {
                     phoneNumber: user.phoneNumber,
                     role: user.role,
                     profile: user.profile
-                },
-                success: true
+                }
             });
 
     } catch (error) {
         console.log(error);
-        return res.status(500).json({ success: false });
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
     }
 };
 
-/* ================= LOGOUT ================= */
+/* =========================
+   LOGOUT USER
+========================= */
 export const logout = async (req, res) => {
     return res
         .status(200)
@@ -320,21 +169,24 @@ export const logout = async (req, res) => {
             sameSite: "none"
         })
         .json({
-            message: "Logged out successfully",
-            success: true
+            success: true,
+            message: "Logged out successfully"
         });
 };
 
-/* ================= UPDATE PROFILE ================= */
+/* =========================
+   UPDATE PROFILE
+========================= */
 export const updateProfile = async (req, res) => {
     try {
         const { fullname, email, phoneNumber, bio, skills } = req.body;
+        const userId = req.id;
 
-        let user = await User.findById(req.id);
+        const user = await User.findById(userId);
         if (!user) {
-            return res.status(400).json({
-                message: "User not found",
-                success: false
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
             });
         }
 
@@ -346,7 +198,9 @@ export const updateProfile = async (req, res) => {
 
         if (req.file) {
             const fileUri = getDataUri(req.file);
-            const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
+            const cloudResponse = await cloudinary.uploader.upload(
+                fileUri.content
+            );
             user.profile.resume = cloudResponse.secure_url;
             user.profile.resumeOriginalName = req.file.originalname;
         }
@@ -354,13 +208,139 @@ export const updateProfile = async (req, res) => {
         await user.save();
 
         return res.status(200).json({
+            success: true,
             message: "Profile updated successfully",
-            user,
-            success: true
+            user
         });
 
     } catch (error) {
         console.log(error);
-        return res.status(500).json({ success: false });
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+/* =========================
+   FORGOT PASSWORD
+========================= */
+export const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        const resetToken = crypto.randomBytes(32).toString("hex");
+        user.resetPasswordToken = resetToken;
+        user.resetPasswordExpiry = Date.now() + 15 * 60 * 1000;
+        await user.save();
+
+        await sendResetPasswordEmail(user.email, resetToken);
+
+        return res.status(200).json({
+            success: true,
+            message: "Reset password link sent to your email"
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+/* =========================
+   RESET PASSWORD
+========================= */
+export const resetPassword = async (req, res) => {
+    try {
+        const { token } = req.params;
+        const { password } = req.body;
+
+        const user = await User.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpiry: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "Reset link is invalid or expired"
+            });
+        }
+
+        const strongPassword =
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&]).{8,}$/;
+
+        if (!strongPassword.test(password)) {
+            return res.status(400).json({
+                success: false,
+                message: "Weak password"
+            });
+        }
+
+        user.password = await bcrypt.hash(password, 10);
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpiry = undefined;
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Password reset successful"
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+/* =========================
+   VERIFY EMAIL
+========================= */
+export const verifyEmail = async (req, res) => {
+    try {
+        const { token } = req.params;
+
+        const user = await User.findOne({
+            emailVerificationToken: token,
+            emailVerificationExpiry: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "Verification link is invalid or expired"
+            });
+        }
+
+        user.isEmailVerified = true;
+        user.emailVerificationToken = undefined;
+        user.emailVerificationExpiry = undefined;
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Email verified successfully. You can now login."
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
     }
 };

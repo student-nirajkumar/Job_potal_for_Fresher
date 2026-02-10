@@ -1,16 +1,27 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+
+// shared
 import Navbar from './components/shared/Navbar'
+
+// auth
 import Login from './components/auth/Login'
 import Signup from './components/auth/Signup'
+import VerifyEmail from './components/auth/VerifyEmail'
+import ForgotPassword from './components/auth/ForgotPassword'
+import ResetPassword from './components/auth/ResetPassword'
+
+// user pages
 import Home from './components/Home'
 import Jobs from './components/Jobs'
 import Browse from './components/Browse'
 import Profile from './components/Profile'
 import JobDescription from './components/JobDescription'
+
+// admin
 import Companies from './components/admin/Companies'
 import CompanyCreate from './components/admin/CompanyCreate'
 import CompanySetup from './components/admin/CompanySetup'
-import AdminJobs from "./components/admin/AdminJobs";
+import AdminJobs from "./components/admin/AdminJobs"
 import PostJob from './components/admin/PostJob'
 import Applicants from './components/admin/Applicants'
 import ProtectedRoute from './components/admin/ProtectedRoute'
@@ -21,6 +32,8 @@ const appRouter = createBrowserRouter([
     path: '/',
     element: <Home />
   },
+
+  // 🔐 AUTH ROUTES
   {
     path: '/login',
     element: <Login />
@@ -29,6 +42,20 @@ const appRouter = createBrowserRouter([
     path: '/signup',
     element: <Signup />
   },
+  {
+    path: '/verify-email/:token',
+    element: <VerifyEmail />
+  },
+  {
+    path: '/forgot-password',
+    element: <ForgotPassword />
+  },
+  {
+    path: '/reset-password/:token',
+    element: <ResetPassword />
+  },
+
+  // 👤 USER ROUTES
   {
     path: "/jobs",
     element: <Jobs />
@@ -45,35 +72,59 @@ const appRouter = createBrowserRouter([
     path: "/profile",
     element: <Profile />
   },
-  // admin ke liye yha se start hoga
-  {
-    path:"/admin/companies",
-    element: <ProtectedRoute><Companies/></ProtectedRoute>
-  },
-  {
-    path:"/admin/companies/create",
-    element: <ProtectedRoute><CompanyCreate/></ProtectedRoute> 
-  },
-  {
-    path:"/admin/companies/:id",
-    element:<ProtectedRoute><CompanySetup/></ProtectedRoute> 
-  },
-  {
-    path:"/admin/jobs",
-    element:<ProtectedRoute><AdminJobs/></ProtectedRoute> 
-  },
-  {
-    path:"/admin/jobs/create",
-    element:<ProtectedRoute><PostJob/></ProtectedRoute> 
-  },
-  {
-    path:"/admin/jobs/:id/applicants",
-    element:<ProtectedRoute><Applicants/></ProtectedRoute> 
-  },
 
+  // 🛠️ ADMIN ROUTES
+  {
+    path: "/admin/companies",
+    element: (
+      <ProtectedRoute>
+        <Companies />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/admin/companies/create",
+    element: (
+      <ProtectedRoute>
+        <CompanyCreate />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/admin/companies/:id",
+    element: (
+      <ProtectedRoute>
+        <CompanySetup />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/admin/jobs",
+    element: (
+      <ProtectedRoute>
+        <AdminJobs />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/admin/jobs/create",
+    element: (
+      <ProtectedRoute>
+        <PostJob />
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: "/admin/jobs/:id/applicants",
+    element: (
+      <ProtectedRoute>
+        <Applicants />
+      </ProtectedRoute>
+    )
+  }
 ])
-function App() {
 
+function App() {
   return (
     <div>
       <RouterProvider router={appRouter} />
