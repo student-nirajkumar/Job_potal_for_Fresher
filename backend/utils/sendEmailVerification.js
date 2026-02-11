@@ -10,7 +10,7 @@ export const sendEmailVerification = async (email, token) => {
             }
         });
 
-        const verifyLink = `http://localhost:5173/verify-email/${token}`;
+        const verifyLink = `https://job-potal-for-fresher.onrender.com/verify-email/${token}`;
 
         await transporter.sendMail({
             from: process.env.EMAIL,

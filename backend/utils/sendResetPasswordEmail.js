@@ -10,7 +10,7 @@ export const sendResetPasswordEmail = async (email, token) => {
             }
         });
 
-        const resetLink = `http://localhost:5173/reset-password/${token}`;
+        const resetLink = `https://job-potal-for-fresher.onrender.com/reset-password/${token}`;
 
         await transporter.sendMail({
             from: process.env.EMAIL,
