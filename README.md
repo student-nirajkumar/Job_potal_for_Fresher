@@ -6,6 +6,9 @@ This project connects **job seekers (students)** and **recruiters** on a single 
 🌐 **Live Demo:**  
 https://online-job-portal-ptpz.onrender.com
 
+**LIVE DEMO:**
+https://job-potal-for-fresher.onrender.com
+
 ---
 
 ## 🚀 Features
